@@ -1,65 +1,268 @@
-import Image from "next/image";
+'use client';
+
+import { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import CoachInterface from './components/CoachInterface';
+import FirstTimeSetup from './components/FirstTimeSetup';
+import WODDisplay from './components/WODDisplay';
+import LoadingState from './components/LoadingState';
+import ActionBar from './components/ActionBar';
+import WorkoutTimer from './components/WorkoutTimer';
+import HistoryPage from './components/HistoryPage';
+import SettingsPage from './components/SettingsPage';
+import HomePage from './components/HomePage';
+import SuccessAnimation from './components/SuccessAnimation';
+import BottomNav from './components/BottomNav';
+import { useWorkoutHistory } from './hooks/useWorkoutHistory';
+import { useConfig } from './hooks/useConfig';
+import { WODInput, WODOutput } from '@/lib/types';
+import { StoredWorkout } from '@/lib/storage';
+
+type ViewMode = 'setup' | 'home' | 'workout' | 'history' | 'settings';
 
 export default function Home() {
+  const [wod, setWod] = useState<WODOutput | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [viewMode, setViewMode] = useState<ViewMode>('home');
+  const [showTimer, setShowTimer] = useState(false);
+  const [savedWorkoutId, setSavedWorkoutId] = useState<string | null>(null);
+  const [lastInput, setLastInput] = useState<WODInput | null>(null);
+  const [showSuccess, setShowSuccess] = useState(false);
+  
+  const { history, addWorkout, removeWorkout } = useWorkoutHistory();
+  const { hasConfig, config } = useConfig();
+
+  // Detect first-time user
+  useEffect(() => {
+    if (!hasConfig) {
+      setViewMode('setup');
+    } else {
+      setViewMode('home');
+    }
+  }, [hasConfig]);
+
+  const generateWorkout = async (data: WODInput) => {
+    setIsLoading(true);
+    setError(null);
+    setWod(null);
+    setSavedWorkoutId(null);
+    setLastInput(data);
+
+    try {
+      const response = await fetch('/api/generate-wod', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to generate WOD');
+      }
+
+      const wodData = await response.json();
+      setWod(wodData);
+      setViewMode('workout');
+      
+      // Auto-save to history
+      const stored = addWorkout(wodData);
+      setSavedWorkoutId(stored.id);
+      
+      // Show success animation
+      setShowSuccess(true);
+      
+      // Scroll to workout
+      setTimeout(() => {
+        document.getElementById('workout-display')?.scrollIntoView({ behavior: 'smooth' });
+      }, 100);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'An unexpected error occurred');
+      setIsLoading(false);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleSubmit = generateWorkout;
+
+  const handleRegenerate = () => {
+    if (lastInput) {
+      generateWorkout(lastInput);
+    } else if (wod) {
+      // Regenerate based on current workout
+      const input: WODInput = {
+        goal: wod.wod_title + ' - similar workout',
+        available_equipment: config.available_equipment || '',
+        preferences: wod.notes || config.preferences || '',
+        limitations: config.limitations || '',
+        notes: config.notes || '',
+      };
+      generateWorkout(input);
+    }
+  };
+
+  const handleVariation = (workout: StoredWorkout, intensity: 'harder' | 'easier') => {
+    const modifier = intensity === 'harder' ? 'Make it more challenging and intense' : 'Make it easier and lighter';
+    const input: WODInput = {
+      goal: workout.wod_title + ` - ${intensity} version`,
+      available_equipment: config.available_equipment || '',
+      preferences: `${modifier}. ${config.preferences || ''}`,
+      limitations: config.limitations || '',
+      notes: config.notes || '',
+    };
+    generateWorkout(input);
+  };
+
+  const handleSelectHistory = (workout: StoredWorkout) => {
+    setWod(workout);
+    setSavedWorkoutId(workout.id);
+    setViewMode('workout');
+    setTimeout(() => {
+      document.getElementById('workout-display')?.scrollIntoView({ behavior: 'smooth' });
+    }, 100);
+  };
+
+  const handleRegenerateFromHistory = (workout: StoredWorkout) => {
+    const input: WODInput = {
+      goal: workout.wod_title + ' - regenerate',
+      available_equipment: config.available_equipment || '',
+      preferences: workout.notes || config.preferences || '',
+      limitations: config.limitations || '',
+      notes: config.notes || '',
+    };
+    generateWorkout(input);
+    setViewMode('workout');
+  };
+
+  const handleNewWorkout = () => {
+    setWod(null);
+    setSavedWorkoutId(null);
+    setViewMode('home');
+    setShowTimer(false);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handleSetupComplete = () => {
+    setViewMode('home');
+  };
+
+  const handleShowHistory = () => {
+    setViewMode('history');
+  };
+
+  const handleShowSettings = () => {
+    setViewMode('settings');
+  };
+
+  const handleBackToHome = () => {
+    setViewMode('home');
+  };
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
+    <div className="min-h-screen bg-gray-50 pb-20 safe-area-inset-bottom">
+      <main className="max-w-2xl mx-auto">
+        <AnimatePresence mode="wait">
+          {/* First-Time Setup */}
+          {viewMode === 'setup' && (
+            <motion.div
+              key="setup"
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: 20 }}
+              transition={{ duration: 0.3, ease: 'easeInOut' }}
+              className="min-h-screen flex items-center px-6 pt-8 pb-32 safe-area-inset-top"
             >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
+              <FirstTimeSetup onComplete={handleSetupComplete} />
+            </motion.div>
+          )}
+
+          {/* Home Page */}
+          {viewMode === 'home' && !wod && (
+            <HomePage
+              key="home"
+              onSubmit={handleSubmit}
+              isLoading={isLoading}
+              error={error}
             />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
+          )}
+
+          {/* History Page */}
+          {viewMode === 'history' && (
+            <HistoryPage
+              key="history"
+              workouts={history}
+              onSelect={handleSelectHistory}
+              onDelete={removeWorkout}
+              onRegenerate={handleRegenerateFromHistory}
+              onVariation={handleVariation}
+              onBack={handleBackToHome}
+            />
+          )}
+
+          {/* Settings Page */}
+          {viewMode === 'settings' && (
+            <SettingsPage
+              key="settings"
+              onBack={handleBackToHome}
+            />
+          )}
+
+          {/* Workout Display */}
+          {wod && viewMode === 'workout' && (
+            <motion.div
+              key="workout"
+              id="workout-display"
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -20 }}
+              transition={{ duration: 0.3, ease: 'easeInOut' }}
+              className="min-h-screen px-4 pt-6 pb-24 safe-area-inset-top space-y-4"
+            >
+              <WODDisplay wod={wod} />
+              {showTimer && (
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="mt-8"
+                >
+                  <WorkoutTimer
+                    wod={wod}
+                    onComplete={() => setShowTimer(false)}
+                  />
+                </motion.div>
+              )}
+            </motion.div>
+          )}
+        </AnimatePresence>
       </main>
+
+      {/* Bottom Navigation - Always Visible (except on workout page) */}
+      {viewMode !== 'workout' && viewMode !== 'setup' && (
+        <BottomNav
+          onShowHome={handleBackToHome}
+          onShowHistory={handleShowHistory}
+          onShowConfig={handleShowSettings}
+          currentView={viewMode === 'home' ? 'home' : viewMode === 'history' ? 'history' : viewMode === 'settings' ? 'settings' : 'home'}
+        />
+      )}
+
+      {/* Action Bar - Only when viewing workout */}
+      {wod && viewMode === 'workout' && (
+        <ActionBar
+          wod={wod}
+          onTimer={() => setShowTimer(!showTimer)}
+          onRegenerate={handleRegenerate}
+        />
+      )}
+
+
+      {/* Success Animation */}
+      {showSuccess && (
+        <SuccessAnimation onComplete={() => setShowSuccess(false)} />
+      )}
     </div>
   );
 }
