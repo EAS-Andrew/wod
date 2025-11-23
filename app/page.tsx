@@ -142,7 +142,6 @@ export default function Home() {
     setWod(null);
     setSavedWorkoutId(null);
     setViewMode('home');
-    setShowTimer(false);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
@@ -241,8 +240,8 @@ export default function Home() {
         />
       )}
 
-      {/* Action Bar - Only when viewing workout */}
-      {wod && viewMode === 'workout' && (
+      {/* Action Bar - Only when viewing workout, hidden in landscape */}
+      {wod && viewMode === 'workout' && !isLandscape && (
         <ActionBar
           wod={wod}
           onBack={handleNewWorkout}
