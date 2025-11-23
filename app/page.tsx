@@ -15,6 +15,7 @@ import SuccessAnimation from './components/SuccessAnimation';
 import BottomNav from './components/BottomNav';
 import { useWorkoutHistory } from './hooks/useWorkoutHistory';
 import { useConfig } from './hooks/useConfig';
+import { useOrientation } from './hooks/useOrientation';
 import { WODInput, WODOutput } from '@/lib/types';
 import { StoredWorkout } from '@/lib/storage';
 
@@ -25,13 +26,13 @@ export default function Home() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<ViewMode>('home');
-  const [showTimer, setShowTimer] = useState(false);
   const [savedWorkoutId, setSavedWorkoutId] = useState<string | null>(null);
   const [lastInput, setLastInput] = useState<WODInput | null>(null);
   const [showSuccess, setShowSuccess] = useState(false);
   
   const { history, addWorkout, removeWorkout } = useWorkoutHistory();
   const { hasConfig, config } = useConfig();
+  const isLandscape = useOrientation();
 
   // Detect first-time user
   useEffect(() => {
@@ -219,28 +220,19 @@ export default function Home() {
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -20 }}
               transition={{ duration: 0.3, ease: 'easeInOut' }}
-              className="min-h-screen px-4 pt-6 pb-24 safe-area-inset-top space-y-4"
+              className={`min-h-screen px-4 pt-6 safe-area-inset-top space-y-4 ${
+                isLandscape ? 'pr-[50%] pb-4' : 'pb-20'
+              }`}
             >
               <WODDisplay wod={wod} />
-              {showTimer && (
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="mt-8"
-                >
-                  <WorkoutTimer
-                    wod={wod}
-                    onComplete={() => setShowTimer(false)}
-                  />
-                </motion.div>
-              )}
+              <WorkoutTimer wod={wod} />
             </motion.div>
           )}
         </AnimatePresence>
       </main>
 
-      {/* Bottom Navigation - Always Visible (except on workout page) */}
-      {viewMode !== 'workout' && viewMode !== 'setup' && (
+      {/* Bottom Navigation - Hidden in landscape mode */}
+      {viewMode !== 'workout' && viewMode !== 'setup' && !isLandscape && (
         <BottomNav
           onShowHome={handleBackToHome}
           onShowHistory={handleShowHistory}
@@ -253,8 +245,7 @@ export default function Home() {
       {wod && viewMode === 'workout' && (
         <ActionBar
           wod={wod}
-          onTimer={() => setShowTimer(!showTimer)}
-          onRegenerate={handleRegenerate}
+          onBack={handleNewWorkout}
         />
       )}
 

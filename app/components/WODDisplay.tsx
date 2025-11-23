@@ -8,6 +8,7 @@ interface WODDisplayProps {
 }
 
 export default function WODDisplay({ wod }: WODDisplayProps) {
+  
   if (!wod) {
     return null;
   }
@@ -20,7 +21,7 @@ export default function WODDisplay({ wod }: WODDisplayProps) {
       className="bg-white rounded-2xl shadow-xl overflow-hidden border-2 border-gray-200"
     >
       {/* Header */}
-      <div className="bg-black text-white p-5">
+      <div className="bg-black text-white p-5 relative">
         <motion.h2
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
