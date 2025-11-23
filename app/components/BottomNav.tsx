@@ -1,7 +1,6 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { useWorkoutHistory } from '../hooks/useWorkoutHistory';
 import { useHaptic } from '../hooks/useHaptic';
 
 interface BottomNavProps {
@@ -12,7 +11,6 @@ interface BottomNavProps {
 }
 
 export default function BottomNav({ onShowHome, onShowHistory, onShowConfig, currentView = 'home' }: BottomNavProps) {
-  const { history } = useWorkoutHistory();
   const haptic = useHaptic();
 
   return (
@@ -36,29 +34,22 @@ export default function BottomNav({ onShowHome, onShowHistory, onShowConfig, cur
             </span>
           </button>
 
-          <button
-            onClick={() => {
-              haptic.light();
-              onShowHistory();
-            }}
-            className={`flex flex-col items-center gap-0.5 py-1.5 px-3 rounded-lg active:scale-95 transition-transform ${
-              currentView === 'history' ? 'text-black' : 'text-gray-600'
-            }`}
-          >
-            <div className="relative">
-              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-              {history.length > 0 && (
-                <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-red-600 text-white text-[9px] font-bold rounded-full flex items-center justify-center">
-                  {history.length}
+              <button
+                onClick={() => {
+                  haptic.light();
+                  onShowHistory();
+                }}
+                className={`flex flex-col items-center gap-0.5 py-1.5 px-3 rounded-lg active:scale-95 transition-transform ${
+                  currentView === 'history' ? 'text-black' : 'text-gray-600'
+                }`}
+              >
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <span className={`text-[10px] leading-tight ${currentView === 'history' ? 'font-bold' : 'font-medium'}`}>
+                  History
                 </span>
-              )}
-            </div>
-            <span className={`text-[10px] leading-tight ${currentView === 'history' ? 'font-bold' : 'font-medium'}`}>
-              History
-            </span>
-          </button>
+              </button>
 
           <button
             onClick={() => {

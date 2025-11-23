@@ -18,7 +18,7 @@ export default function HomePage({ onSubmit, isLoading, error }: HomePageProps) 
       animate={{ opacity: 1, x: 0 }}
       exit={{ opacity: 0, x: 20 }}
       transition={{ duration: 0.3, ease: 'easeInOut' }}
-      className="h-screen flex items-center px-4 py-4 overflow-hidden safe-area-inset-top safe-area-inset-bottom"
+      className="h-screen flex items-center px-4 py-4 pb-20 overflow-hidden safe-area-inset-top safe-area-inset-bottom"
     >
       <div className="w-full h-full flex flex-col items-center justify-center overflow-y-auto">
         {isLoading ? (

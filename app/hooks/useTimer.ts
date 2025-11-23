@@ -43,13 +43,24 @@ export function useTimer(timeCapMinutes?: number, format?: WODFormat) {
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const emomIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const countdownIntervalRef = useRef<NodeJS.Timeout | null>(null);
-  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const audioContextRef = useRef<AudioContext | null>(null);
+
+  // Initialize audio context (must be done on user interaction)
+  const getAudioContext = () => {
+    if (!audioContextRef.current) {
+      audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
+    }
+    // Resume if suspended (browsers suspend audio context by default)
+    if (audioContextRef.current.state === 'suspended') {
+      audioContextRef.current.resume();
+    }
+    return audioContextRef.current;
+  };
 
   // Play beep sound
   const playBeep = (frequency: number = 800, duration: number = 0.1) => {
     try {
-      // Create audio context for beep
-      const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+      const audioContext = getAudioContext();
       const oscillator = audioContext.createOscillator();
       const gainNode = audioContext.createGain();
       
@@ -65,7 +76,7 @@ export function useTimer(timeCapMinutes?: number, format?: WODFormat) {
       oscillator.start(audioContext.currentTime);
       oscillator.stop(audioContext.currentTime + duration);
     } catch (err) {
-      console.log('Could not play beep sound');
+      console.log('Could not play beep sound:', err);
     }
   };
 
@@ -218,6 +229,8 @@ export function useTimer(timeCapMinutes?: number, format?: WODFormat) {
   }, [state.isRunning, state.isPaused, state.countdown, isEMOM, isTabata]);
 
   const start = () => {
+    // Activate audio context on user interaction
+    getAudioContext();
     setState((prev) => ({
       ...prev,
       countdown: 10, // Start 10 second countdown
@@ -306,6 +319,16 @@ export function useTimer(timeCapMinutes?: number, format?: WODFormat) {
       return cycleTime - cyclePosition;
     }
   };
+
+  // Cleanup audio context on unmount
+  useEffect(() => {
+    return () => {
+      if (audioContextRef.current) {
+        audioContextRef.current.close().catch(() => {});
+        audioContextRef.current = null;
+      }
+    };
+  }, []);
 
   return {
     ...state,

@@ -64,7 +64,7 @@ export default function SettingsPage({ onBack }: SettingsPageProps) {
       animate={{ opacity: 1, x: 0 }}
       exit={{ opacity: 0, x: -20 }}
       transition={{ duration: 0.3, ease: 'easeInOut' }}
-      className="h-screen bg-gray-50 flex flex-col overflow-hidden"
+      className="h-screen bg-gray-50 flex flex-col overflow-hidden pb-20"
     >
       {/* Header */}
       <div className="sticky top-0 bg-white border-b-2 border-gray-200 z-30 safe-area-inset-top">

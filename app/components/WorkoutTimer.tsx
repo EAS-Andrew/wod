@@ -76,7 +76,7 @@ export default function WorkoutTimer({ wod }: WorkoutTimerProps) {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: 20 }}
-        className="fixed bottom-[76px] left-1/2 transform -translate-x-1/2 z-50 safe-area-inset-bottom"
+        className="fixed bottom-20 left-1/2 transform -translate-x-1/2 z-50 safe-area-inset-bottom"
       >
         <div className={`rounded-full px-4 py-2.5 shadow-lg flex items-center gap-3 ${
           isTimeUp ? 'bg-red-600' : 'bg-black'
