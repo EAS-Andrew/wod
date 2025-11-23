@@ -26,7 +26,7 @@ export default function WODDisplay({ wod }: WODDisplayProps) {
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ delay: 0.1 }}
-          className="text-2xl md:text-3xl font-black mb-3 leading-tight"
+          className="text-xl sm:text-2xl md:text-3xl font-black mb-2 sm:mb-3 leading-tight"
         >
           {wod.wod_title}
         </motion.h2>
@@ -41,7 +41,7 @@ export default function WODDisplay({ wod }: WODDisplayProps) {
       </div>
 
       {/* Content */}
-      <div className="p-5 space-y-6 pb-24">
+      <div className="p-4 sm:p-5 space-y-4 sm:space-y-6">
         {wod.sections.map((section, index) => (
           <motion.div
             key={index}
@@ -60,7 +60,7 @@ export default function WODDisplay({ wod }: WODDisplayProps) {
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   transition={{ delay: 0.3 + index * 0.1 + itemIndex * 0.05 }}
-                  className="text-base text-gray-800 leading-relaxed font-medium"
+                  className="text-sm sm:text-base text-gray-800 leading-relaxed font-medium"
                 >
                   {item}
                 </motion.li>

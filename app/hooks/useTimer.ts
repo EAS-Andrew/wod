@@ -16,6 +16,7 @@ export interface TimerState {
   tabataRound?: number;
   tabataWorkTime?: number;
   tabataRestTime?: number;
+  countdown?: number; // countdown in seconds (10, 9, 8, ...)
 }
 
 export function useTimer(timeCapMinutes?: number, format?: WODFormat) {
@@ -36,14 +37,16 @@ export function useTimer(timeCapMinutes?: number, format?: WODFormat) {
     tabataRound: 0,
     tabataWorkTime: 20, // 20 seconds work
     tabataRestTime: 10, // 10 seconds rest
+    countdown: undefined,
   });
 
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const emomIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const countdownIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   // Play beep sound
-  const playBeep = () => {
+  const playBeep = (frequency: number = 800, duration: number = 0.1) => {
     try {
       // Create audio context for beep
       const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
@@ -53,34 +56,105 @@ export function useTimer(timeCapMinutes?: number, format?: WODFormat) {
       oscillator.connect(gainNode);
       gainNode.connect(audioContext.destination);
       
-      oscillator.frequency.value = 800;
+      oscillator.frequency.value = frequency;
       oscillator.type = 'sine';
       
       gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
-      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1);
+      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + duration);
       
       oscillator.start(audioContext.currentTime);
-      oscillator.stop(audioContext.currentTime + 0.1);
+      oscillator.stop(audioContext.currentTime + duration);
     } catch (err) {
       console.log('Could not play beep sound');
     }
   };
 
+  // Countdown interval
+  useEffect(() => {
+    if (state.countdown !== undefined && state.countdown > 0 && !state.isRunning) {
+      countdownIntervalRef.current = setInterval(() => {
+        setState((prev) => {
+          if (prev.countdown === undefined) return prev;
+          
+          const newCountdown = prev.countdown - 1;
+          
+          // Beep on 3, 2, 1
+          if (newCountdown <= 3 && newCountdown > 0) {
+            playBeep(1000, 0.15); // Higher pitch, longer beep for countdown
+          }
+          
+          // Start timer when countdown reaches 0
+          if (newCountdown === 0) {
+            playBeep(1200, 0.3); // Final beep to start
+            return {
+              ...prev,
+              countdown: undefined,
+              isRunning: true,
+              isPaused: false,
+            };
+          }
+          
+          return {
+            ...prev,
+            countdown: newCountdown,
+          };
+        });
+      }, 1000);
+    } else {
+      if (countdownIntervalRef.current) {
+        clearInterval(countdownIntervalRef.current);
+        countdownIntervalRef.current = null;
+      }
+    }
+
+    return () => {
+      if (countdownIntervalRef.current) {
+        clearInterval(countdownIntervalRef.current);
+      }
+    };
+  }, [state.countdown, state.isRunning]);
+
   // Main timer interval
   useEffect(() => {
-    if (state.isRunning && !state.isPaused) {
+    if (state.isRunning && !state.isPaused && state.countdown === undefined) {
       intervalRef.current = setInterval(() => {
         setState((prev) => {
           const newElapsed = prev.elapsed + 1;
           
           // EMOM: Check if new minute started
           if (isEMOM && newElapsed > 0 && newElapsed % 60 === 0) {
-            playBeep();
+            playBeep(880, 0.1); // High pitch beep for new minute
             return {
               ...prev,
               elapsed: newElapsed,
               emomMinute: Math.floor(newElapsed / 60),
             };
+          }
+          
+          // Every minute beep (for non-EMOM timers) - progress indicator
+          if (!isEMOM && !isTabata && newElapsed > 0 && newElapsed % 60 === 0) {
+            playBeep(600, 0.08); // Lower pitch, shorter beep for minute markers
+          }
+          
+          // Time warnings: Halfway point and final countdown
+          if (prev.timeCap) {
+            const remaining = prev.timeCap - newElapsed;
+            const halfway = prev.timeCap / 2;
+            
+            // Halfway warning
+            if (newElapsed === Math.floor(halfway) && newElapsed > 0) {
+              playBeep(700, 0.2); // Medium pitch, longer beep
+            }
+            
+            // Last 30 seconds warning
+            if (remaining === 30 && remaining > 0) {
+              playBeep(900, 0.15);
+            }
+            
+            // Last 10 seconds countdown
+            if (remaining <= 10 && remaining > 0) {
+              playBeep(1000, 0.1); // High pitch beep for urgency
+            }
           }
           
           // Tabata: Handle work/rest intervals
@@ -90,8 +164,10 @@ export function useTimer(timeCapMinutes?: number, format?: WODFormat) {
             const newTabataRound = Math.floor(newElapsed / cycleTime);
             
             // Beep at start of work and rest periods
-            if (cyclePosition === 0 || cyclePosition === (prev.tabataWorkTime || 20)) {
-              playBeep();
+            if (cyclePosition === 0) {
+              playBeep(1000, 0.1); // High pitch for work start
+            } else if (cyclePosition === (prev.tabataWorkTime || 20)) {
+              playBeep(440, 0.1); // Lower pitch for rest start
             }
             
             // Check if time cap reached
@@ -113,7 +189,7 @@ export function useTimer(timeCapMinutes?: number, format?: WODFormat) {
           
           // Check if time cap reached (for For time, AMRAP, etc.)
           if (prev.timeCap && newElapsed >= prev.timeCap) {
-            playBeep();
+            playBeep(220, 0.5); // Low pitch, long beep for time cap
             return {
               ...prev,
               elapsed: prev.timeCap,
@@ -139,17 +215,19 @@ export function useTimer(timeCapMinutes?: number, format?: WODFormat) {
         clearInterval(intervalRef.current);
       }
     };
-  }, [state.isRunning, state.isPaused, isEMOM, isTabata]);
+  }, [state.isRunning, state.isPaused, state.countdown, isEMOM, isTabata]);
 
   const start = () => {
     setState((prev) => ({
       ...prev,
-      isRunning: true,
+      countdown: 10, // Start 10 second countdown
+      isRunning: false,
       isPaused: false,
     }));
   };
 
   const pause = () => {
+    playBeep(500, 0.1); // Lower pitch beep for pause
     setState((prev) => ({
       ...prev,
       isPaused: true,
@@ -157,6 +235,7 @@ export function useTimer(timeCapMinutes?: number, format?: WODFormat) {
   };
 
   const resume = () => {
+    playBeep(600, 0.1); // Medium pitch beep for resume
     setState((prev) => ({
       ...prev,
       isPaused: false,
@@ -164,6 +243,7 @@ export function useTimer(timeCapMinutes?: number, format?: WODFormat) {
   };
 
   const reset = () => {
+    playBeep(400, 0.15); // Low pitch beep for reset
     setState({
       isRunning: false,
       isPaused: false,
@@ -176,10 +256,12 @@ export function useTimer(timeCapMinutes?: number, format?: WODFormat) {
       tabataRound: 0,
       tabataWorkTime: 20,
       tabataRestTime: 10,
+      countdown: undefined,
     });
   };
 
   const addRound = () => {
+    playBeep(800, 0.08); // Quick beep for round added
     setState((prev) => ({
       ...prev,
       rounds: (prev.rounds || 0) + 1,
@@ -188,6 +270,7 @@ export function useTimer(timeCapMinutes?: number, format?: WODFormat) {
   };
 
   const subtractRound = () => {
+    playBeep(600, 0.08); // Quick beep for round subtracted
     setState((prev) => ({
       ...prev,
       rounds: Math.max(0, (prev.rounds || 0) - 1),
@@ -241,6 +324,7 @@ export function useTimer(timeCapMinutes?: number, format?: WODFormat) {
     isTabata,
     tabataPhase: getTabataPhase(),
     tabataPhaseTime: getTabataPhaseTime(),
+    isCountdown: state.countdown !== undefined,
   };
 }
 

@@ -219,11 +219,13 @@ export default function Home() {
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -20 }}
               transition={{ duration: 0.3, ease: 'easeInOut' }}
-              className={`min-h-screen px-4 pt-6 safe-area-inset-top space-y-4 ${
-                isLandscape ? 'pr-[50%] pb-4' : 'pb-20'
+              className={`h-screen px-4 pt-4 pb-4 safe-area-inset-top safe-area-inset-bottom overflow-hidden flex flex-col ${
+                isLandscape ? 'pr-[50%]' : ''
               }`}
             >
-              <WODDisplay wod={wod} />
+              <div className="flex-1 overflow-y-auto">
+                <WODDisplay wod={wod} />
+              </div>
               <WorkoutTimer wod={wod} />
             </motion.div>
           )}

@@ -137,17 +137,17 @@ export default function CoachInterface({ onSubmit, isLoading }: CoachInterfacePr
       const isIOS = typeof window !== 'undefined' && /iPad|iPhone|iPod/.test(navigator.userAgent);
       
       return (
-        <div className="flex flex-col items-center justify-center min-h-[60vh] text-center px-4">
+        <div className="flex flex-col items-center justify-center w-full text-center px-4 py-4">
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="w-full max-w-md space-y-6"
+            className="w-full max-w-md space-y-4 sm:space-y-6"
           >
-            <div className="text-center mb-8">
-              <h2 className="text-3xl md:text-4xl font-black text-gray-900 mb-3">
-                What kind of workout do you want today?
-              </h2>
-              <p className="text-gray-600 text-lg">
+            <div className="text-center mb-4 sm:mb-8">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-black text-gray-900 mb-3">
+              What kind of workout do you want today?
+            </h2>
+            <p className="text-gray-600 text-base sm:text-lg">
                 {config.available_equipment
                   ? `Using your ${config.available_equipment.split(',')[0]}...`
                   : "Tell me your goal and I'll create a workout"}
@@ -158,10 +158,10 @@ export default function CoachInterface({ onSubmit, isLoading }: CoachInterfacePr
               <motion.button
                 type="button"
                 onClick={() => setShowTextInput(true)}
-                className="w-full py-16 px-8 rounded-3xl font-black text-2xl bg-black text-white hover:bg-gray-800 transition-all shadow-2xl"
+                className="w-full py-8 sm:py-12 md:py-16 px-8 rounded-3xl font-black text-lg sm:text-xl md:text-2xl bg-black text-white hover:bg-gray-800 transition-all shadow-2xl"
               >
-                <div className="flex flex-col items-center gap-4">
-                  <svg className="w-20 h-20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <div className="flex flex-col items-center gap-3 sm:gap-4">
+                  <svg className="w-16 h-16 sm:w-20 sm:h-20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                   </svg>
                   <span>Type Your Goal</span>
@@ -177,8 +177,8 @@ export default function CoachInterface({ onSubmit, isLoading }: CoachInterfacePr
                   value={textInput}
                   onChange={(e) => setTextInput(e.target.value)}
                   placeholder="e.g., Full body workout, 30 minutes, using kettlebells..."
-                  className="w-full px-6 py-4 text-lg border-2 border-gray-300 rounded-2xl focus:ring-2 focus:ring-black focus:border-black resize-none"
-                  rows={4}
+                  className="w-full px-4 sm:px-6 py-3 sm:py-4 text-base sm:text-lg border-2 border-gray-300 rounded-2xl focus:ring-2 focus:ring-black focus:border-black resize-none"
+                  rows={3}
                   autoFocus
                 />
                 <div className="flex gap-3">
@@ -218,13 +218,13 @@ export default function CoachInterface({ onSubmit, isLoading }: CoachInterfacePr
       );
     }
 
-    return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh] px-4">
-        <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          className="w-full max-w-lg space-y-8"
-        >
+  return (
+    <div className="flex flex-col items-center justify-center w-full px-4 py-4">
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        className="w-full max-w-lg space-y-4 sm:space-y-6"
+      >
           {/* Step Indicator */}
           <div className="text-center">
             <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-gray-100 rounded-full">
@@ -239,10 +239,10 @@ export default function CoachInterface({ onSubmit, isLoading }: CoachInterfacePr
             animate={{ opacity: 1, y: 0 }}
             className="text-center space-y-3"
           >
-            <h2 className="text-3xl md:text-4xl font-black text-gray-900 leading-tight">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-black text-gray-900 leading-tight">
               What kind of workout do you want today?
             </h2>
-            <p className="text-gray-600 text-lg">
+            <p className="text-gray-600 text-base sm:text-lg">
               {config.available_equipment
                 ? `Using your ${config.available_equipment.split(',')[0]}...`
                 : "Tell me your goal and I'll create a workout"}
@@ -256,7 +256,7 @@ export default function CoachInterface({ onSubmit, isLoading }: CoachInterfacePr
             disabled={isLoading}
             whileHover={{ scale: isListening ? 1 : 1.02 }}
             whileTap={{ scale: 0.98 }}
-            className={`w-full py-16 px-6 rounded-2xl font-black text-xl transition-all shadow-2xl ${
+            className={`w-full py-8 sm:py-12 md:py-16 px-6 rounded-2xl font-black text-lg sm:text-xl transition-all shadow-2xl ${
               isListening
                 ? 'bg-red-600 text-white animate-pulse'
                 : 'bg-black text-white hover:bg-gray-800'
@@ -268,12 +268,12 @@ export default function CoachInterface({ onSubmit, isLoading }: CoachInterfacePr
                   <motion.div
                     animate={{ scale: [1, 1.3, 1] }}
                     transition={{ repeat: Infinity, duration: 1 }}
-                    className="w-20 h-20 bg-white/20 rounded-full flex items-center justify-center"
+                    className="w-16 h-16 sm:w-20 sm:h-20 bg-white/20 rounded-full flex items-center justify-center"
                   >
                     <motion.div
                       animate={{ scale: [1, 1.2, 1] }}
                       transition={{ repeat: Infinity, duration: 0.5 }}
-                      className="w-10 h-10 bg-white rounded-full"
+                      className="w-8 h-8 sm:w-10 sm:h-10 bg-white rounded-full"
                     />
                   </motion.div>
                   <span>Listening...</span>
@@ -331,9 +331,9 @@ export default function CoachInterface({ onSubmit, isLoading }: CoachInterfacePr
         initial={{ opacity: 0, x: 20 }}
         animate={{ opacity: 1, x: 0 }}
         exit={{ opacity: 0, x: -20 }}
-        className="flex flex-col items-center justify-center min-h-[60vh] px-4"
+        className="flex flex-col items-center justify-center w-full px-4 py-4"
       >
-        <div className="w-full max-w-lg space-y-6">
+        <div className="w-full max-w-lg space-y-4 sm:space-y-6">
           {/* Step Indicator */}
           <div className="text-center">
             <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-gray-100 rounded-full">

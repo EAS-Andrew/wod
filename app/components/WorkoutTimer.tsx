@@ -32,9 +32,45 @@ export default function WorkoutTimer({ wod }: WorkoutTimerProps) {
   };
 
   const isTimeUp = Boolean(timer.timeCap && timer.elapsed >= timer.timeCap);
+  const isCountdown = timer.isCountdown && timer.countdown !== undefined;
 
   // Portrait: Compact pill at bottom
   if (!isLandscape) {
+    // Show countdown overlay
+    if (isCountdown) {
+      return (
+        <motion.div
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={{ opacity: 1, scale: 1 }}
+          exit={{ opacity: 0, scale: 0.8 }}
+          className="fixed inset-0 bg-black/80 flex items-center justify-center z-50"
+        >
+          <motion.div
+            key={timer.countdown}
+            initial={{ scale: 1.2 }}
+            animate={{ scale: 1 }}
+            className="text-center"
+          >
+            <motion.div
+              className={`text-9xl font-black ${
+                timer.countdown && timer.countdown <= 3 ? 'text-red-500' : 'text-white'
+              }`}
+            >
+              {timer.countdown}
+            </motion.div>
+            {timer.countdown && timer.countdown <= 3 && (
+              <motion.p
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="text-2xl text-white mt-4 font-bold"
+              >
+                Get Ready!
+              </motion.p>
+            )}
+          </motion.div>
+        </motion.div>
+      );
+    }
     return (
       <motion.div
         initial={{ opacity: 0, y: 20 }}
@@ -130,7 +166,7 @@ export default function WorkoutTimer({ wod }: WorkoutTimerProps) {
               }`}
               disabled={isTimeUp}
             >
-              {!timer.isRunning ? 'Start' : timer.isPaused ? 'Resume' : 'Pause'}
+              {timer.isCountdown ? 'Starting...' : !timer.isRunning ? 'Start' : timer.isPaused ? 'Resume' : 'Pause'}
             </button>
 
             {timer.isRunning && (
@@ -165,41 +201,77 @@ export default function WorkoutTimer({ wod }: WorkoutTimerProps) {
   }
 
   // Landscape: Rich timer panel (50/50 split)
+  // Show countdown overlay
+  if (isCountdown) {
+    return (
+      <motion.div
+        initial={{ opacity: 0, scale: 0.8 }}
+        animate={{ opacity: 1, scale: 1 }}
+        exit={{ opacity: 0, scale: 0.8 }}
+        className="fixed inset-0 bg-black/80 flex items-center justify-center z-50"
+      >
+        <motion.div
+          key={timer.countdown}
+          initial={{ scale: 1.2 }}
+          animate={{ scale: 1 }}
+          className="text-center"
+        >
+          <motion.div
+            className={`text-6xl sm:text-7xl md:text-8xl lg:text-9xl font-black ${
+              timer.countdown && timer.countdown <= 3 ? 'text-red-500' : 'text-white'
+            }`}
+          >
+            {timer.countdown}
+          </motion.div>
+          {timer.countdown && timer.countdown <= 3 && (
+            <motion.p
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="text-lg sm:text-xl md:text-2xl text-white mt-2 sm:mt-4 font-bold"
+            >
+              Get Ready!
+            </motion.p>
+          )}
+        </motion.div>
+      </motion.div>
+    );
+  }
+
   return (
     <motion.div
       initial={{ opacity: 0, x: 20 }}
       animate={{ opacity: 1, x: 0 }}
       exit={{ opacity: 0, x: -20 }}
-      className="fixed right-0 top-0 bottom-0 w-1/2 bg-black text-white z-40 shadow-2xl safe-area-inset-top safe-area-inset-bottom overflow-y-auto"
+      className="fixed right-0 top-0 bottom-0 w-1/2 bg-black text-white z-40 shadow-2xl safe-area-inset-top safe-area-inset-bottom flex flex-col overflow-hidden"
     >
-      <div className="p-6 space-y-6">
+      <div className="flex-1 flex flex-col overflow-y-auto p-3 sm:p-4 md:p-6 space-y-3 sm:space-y-4 md:space-y-6">
         {/* Header */}
-        <div className="border-b border-white/20 pb-4">
-          <div className="flex items-center justify-between mb-2">
-            <h3 className="text-lg font-black uppercase tracking-wide">{wod.format}</h3>
+        <div className="border-b border-white/20 pb-2 sm:pb-3 md:pb-4 flex-shrink-0">
+          <div className="flex items-center justify-between mb-1 sm:mb-2 gap-2">
+            <h3 className="text-sm sm:text-base md:text-lg font-black uppercase tracking-wide truncate">{wod.format}</h3>
             {timer.timeCap && (
-              <div className="text-sm text-white/70">
+              <div className="text-xs sm:text-sm text-white/70 whitespace-nowrap">
                 Cap: {timer.formatTime(timer.timeCap)}
               </div>
             )}
           </div>
-          <h4 className="text-sm text-white/60">{wod.wod_title}</h4>
+          <h4 className="text-xs sm:text-sm text-white/60 line-clamp-2">{wod.wod_title}</h4>
         </div>
 
         {/* Main Timer */}
-        <div className="text-center py-4">
+        <div className="text-center py-2 sm:py-3 md:py-4 flex-shrink-0">
           <motion.div
             key={timer.elapsed}
             initial={{ scale: 1.05 }}
             animate={{ scale: 1 }}
-            className={`text-5xl font-bold tabular-nums mb-2 ${
+            className={`text-3xl sm:text-4xl md:text-5xl font-bold tabular-nums mb-1 sm:mb-2 ${
               isTimeUp ? 'text-red-400' : 'text-white'
             }`}
           >
             {timer.formattedElapsed}
           </motion.div>
           {timer.formattedRemaining && timer.timeCap && (
-            <div className="text-lg text-white/60">
+            <div className="text-sm sm:text-base md:text-lg text-white/60">
               {timer.formattedRemaining} remaining
             </div>
           )}
@@ -207,21 +279,21 @@ export default function WorkoutTimer({ wod }: WorkoutTimerProps) {
 
         {/* Format-Specific Rich Display */}
         {timer.isAMRAP && (
-          <div className="bg-white/10 rounded-xl p-4">
-            <div className="text-sm text-white/70 mb-3 uppercase tracking-wide">Rounds Completed</div>
-            <div className="text-4xl font-black mb-4">{timer.rounds || 0}</div>
+          <div className="bg-white/10 rounded-xl p-3 sm:p-4 flex-shrink-0">
+            <div className="text-xs sm:text-sm text-white/70 mb-2 sm:mb-3 uppercase tracking-wide">Rounds Completed</div>
+            <div className="text-2xl sm:text-3xl md:text-4xl font-black mb-2 sm:mb-3 md:mb-4">{timer.rounds || 0}</div>
             {timer.isRunning && (
               <div className="flex gap-2">
                 <button
                   onClick={timer.subtractRound}
-                  className="flex-1 bg-white/20 hover:bg-white/30 text-white py-3 rounded-lg text-lg font-bold active:scale-95"
+                  className="flex-1 bg-white/20 hover:bg-white/30 text-white py-2 sm:py-3 rounded-lg text-base sm:text-lg font-bold active:scale-95"
                   disabled={timer.isPaused}
                 >
                   −
                 </button>
                 <button
                   onClick={timer.addRound}
-                  className="flex-1 bg-white/20 hover:bg-white/30 text-white py-3 rounded-lg text-lg font-bold active:scale-95"
+                  className="flex-1 bg-white/20 hover:bg-white/30 text-white py-2 sm:py-3 rounded-lg text-base sm:text-lg font-bold active:scale-95"
                   disabled={timer.isPaused}
                 >
                   +
@@ -232,28 +304,28 @@ export default function WorkoutTimer({ wod }: WorkoutTimerProps) {
         )}
 
         {timer.isEMOM && (
-          <div className="bg-white/10 rounded-xl p-4">
-            <div className="text-sm text-white/70 mb-3 uppercase tracking-wide">Current Minute</div>
-            <div className="text-4xl font-black">{timer.emomMinute || 0}</div>
-            <div className="text-xs text-white/60 mt-2">Timer beeps at start of each minute</div>
+          <div className="bg-white/10 rounded-xl p-3 sm:p-4 flex-shrink-0">
+            <div className="text-xs sm:text-sm text-white/70 mb-2 sm:mb-3 uppercase tracking-wide">Current Minute</div>
+            <div className="text-2xl sm:text-3xl md:text-4xl font-black">{timer.emomMinute || 0}</div>
+            <div className="text-xs text-white/60 mt-1 sm:mt-2">Timer beeps at start of each minute</div>
           </div>
         )}
 
         {timer.isTabata && timer.tabataRound !== undefined && (
-          <div className="space-y-3">
-            <div className={`rounded-xl p-4 ${
+          <div className="space-y-2 sm:space-y-3 flex-shrink-0">
+            <div className={`rounded-xl p-3 sm:p-4 ${
               timer.tabataPhase === 'work' ? 'bg-red-600/30' : 'bg-green-600/30'
             }`}>
-              <div className="text-sm text-white/70 mb-2 uppercase tracking-wide">
+              <div className="text-xs sm:text-sm text-white/70 mb-1 sm:mb-2 uppercase tracking-wide">
                 Round {timer.tabataRound + 1} of 8
               </div>
-              <div className={`text-3xl font-black mb-2 ${
+              <div className={`text-xl sm:text-2xl md:text-3xl font-black mb-1 sm:mb-2 ${
                 timer.tabataPhase === 'work' ? 'text-red-300' : 'text-green-300'
               }`}>
                 {timer.tabataPhase === 'work' ? 'WORK' : 'REST'}
               </div>
               {timer.tabataPhaseTime !== null && (
-                <div className={`text-2xl font-bold ${
+                <div className={`text-lg sm:text-xl md:text-2xl font-bold ${
                   timer.tabataPhase === 'work' ? 'text-red-300' : 'text-green-300'
                 }`}>
                   {timer.formatTime(timer.tabataPhaseTime)}
@@ -264,23 +336,23 @@ export default function WorkoutTimer({ wod }: WorkoutTimerProps) {
         )}
 
         {/* Controls */}
-        <div className="space-y-3 pt-4 border-t border-white/20">
+        <div className="space-y-2 sm:space-y-3 pt-3 sm:pt-4 border-t border-white/20 flex-shrink-0 mt-auto">
           <button
             onClick={handleToggle}
-            className={`w-full py-4 rounded-xl text-base font-bold transition-colors active:scale-95 ${
+            className={`w-full py-2 sm:py-3 md:py-4 rounded-xl text-sm sm:text-base font-bold transition-colors active:scale-95 ${
               timer.isRunning && !timer.isPaused
                 ? 'bg-red-600 text-white hover:bg-red-700'
                 : 'bg-white/20 text-white hover:bg-white/30'
             }`}
-            disabled={isTimeUp}
+            disabled={isTimeUp || timer.isCountdown}
           >
-            {!timer.isRunning ? 'Start Timer' : timer.isPaused ? 'Resume' : 'Pause'}
+            {timer.isCountdown ? 'Starting...' : !timer.isRunning ? 'Start Timer' : timer.isPaused ? 'Resume' : 'Pause'}
           </button>
 
           {timer.isRunning && (
             <button
               onClick={handleReset}
-              className="w-full py-3 bg-white/10 text-white rounded-xl hover:bg-white/20 transition-colors active:scale-95 font-semibold"
+              className="w-full py-2 sm:py-3 bg-white/10 text-white rounded-xl hover:bg-white/20 transition-colors active:scale-95 text-sm sm:text-base font-semibold"
             >
               Reset Timer
             </button>

@@ -30,7 +30,7 @@ export default function HistoryPage({
       animate={{ opacity: 1, x: 0 }}
       exit={{ opacity: 0, x: -20 }}
       transition={{ duration: 0.3, ease: 'easeInOut' }}
-      className="min-h-screen bg-gray-50 pb-24"
+      className="h-screen bg-gray-50 flex flex-col overflow-hidden"
     >
       {/* Header */}
       <div className="sticky top-0 bg-white border-b-2 border-gray-200 z-30 safe-area-inset-top">
@@ -43,7 +43,8 @@ export default function HistoryPage({
       </div>
 
       {/* Content */}
-      <div className="max-w-2xl mx-auto px-4 py-4">
+      <div className="flex-1 overflow-y-auto">
+        <div className="max-w-2xl mx-auto px-4 py-4">
         {workouts.length === 0 ? (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -112,6 +113,7 @@ export default function HistoryPage({
             ))}
           </div>
         )}
+        </div>
       </div>
     </motion.div>
   );
